@@ -5,7 +5,11 @@ require 'digest/sha1'
 require 'pry'
 require 'uri'
 require 'open-uri'
+# require 'bcrypt' # WHY DOES THIS
+
 # require 'nokogiri'
+
+set :sessions, true
 
 ###########################################################
 # Configuration
@@ -71,11 +75,29 @@ get '/login' do
   erb :login
 end
 
+post '/login' do 
+    puts params["password"]
+    username = params["username"]
+    password = params["password"]
+    you = User.find_by_username(username.to_s)
+    if you.nil?
+        puts "username doesn't exist in database. Creating new one, for now." 
+        # for now, encrypt password, add to login
+        User.create(username: username, password: BCrypt::Password.create(password))
+    elsif authenticate?(password, you)
+        puts "found username, found password"
+        session[:username] = you.id
+    else
+        puts "wrong password, solve later"
+    end
+    puts "redirecting"
+    redirect "/"
+end
 
 get '/' do
-  if !authenticate?
-     redirect "/login" 
-  end
+    # session["username"] ||= nil 
+    # redirect "/login" 
+  
 
     erb :index
 end
@@ -134,4 +156,9 @@ def get_url_title url
     # Nokogiri::HTML.parse( read_url_head url ).title
     result = read_url_head(url).match(/<title>(.*)<\/title>/)
     result.nil? ? "" : result[1]
+end
+
+# helper function, checks password against bcrypted password
+def authenticate?(password, you)
+    BCrypt::Password.create(password) == you[:password]
 end

@@ -33,6 +33,7 @@ window.Shortly = Backbone.View.extend({
     return this;
   },
   renderLoginView: function(){
+    var login = new Shortly.Login();
     var loginView = new Shortly.LoginView( { model: login } );
     this.$el.find('#container').html( loginView.render().el );
   },
@@ -74,9 +75,9 @@ window.Shortly = Backbone.View.extend({
   },
 
   sortVisit: function(e){
-    console.log('hi');
-    var list = $(".link");
-    console.log(list)
+    $('.link').find('.lastVisit')
+    var ar = []; 
+    console.log(sortBy);
   },
   // write an onclick event
   // get (send name of button)
