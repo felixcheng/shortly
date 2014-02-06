@@ -10,6 +10,13 @@ require 'open-uri'
 # require 'nokogiri'
 
 set :sessions, true
+# TODO
+# use Rack::Session::Cookie, :key => 'rack.session',
+#                            :domain => 'foo.com',
+#                            :path => '/',
+#                            :expire_after => 2592000, # In seconds
+#                            :secret => 'change_me'
+
 
 ###########################################################
 # Configuration
@@ -80,6 +87,7 @@ post '/login' do
     username = params["username"]
     password = params["password"]
     you = User.find_by_username(username.to_s)
+    puts "#{you.username} #{you.password} found"
     if you.nil?
         puts "username doesn't exist in database. Creating new one, for now." 
         # for now, encrypt password, add to login
@@ -87,23 +95,23 @@ post '/login' do
     elsif authenticate?(password, you)
         puts "found username, found password"
         session[:username] = you.id
+        puts session[:username]
     else
+        error 404
         puts "wrong password, solve later"
     end
+    logged_in?
     puts "redirecting"
-    redirect "/"
 end
 
 get '/' do
-    # session["username"] ||= nil 
-    # redirect "/login" 
-  
-
+    logged_in?
     erb :index
 end
 
 get '/links' do
     # links = Link.order("updated_at DESC")
+    logged_in?
     links = Link.order("visits DESC")
     links.map { |link|
         link.as_json.merge(base_url: request.base_url)
@@ -160,5 +168,12 @@ end
 
 # helper function, checks password against bcrypted password
 def authenticate?(password, you)
-    BCrypt::Password.create(password) == you[:password]
+    BCrypt::Password.new(you[:password]) == password
+end
+def logged_in?
+    if session[:username]
+        return true
+    else
+        redirect '/login'
+    end
 end

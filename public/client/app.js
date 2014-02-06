@@ -17,7 +17,9 @@ window.Shortly = Backbone.View.extend({
     "click li a.index":  "renderIndexView",
     "click li a.create": "renderCreateView",
     "click li a.lastVisit": "sortVisit", 
-    "keypress input": "logKey"
+    "keypress input": "logKey",
+     "click button.submit": "authenticate"
+
     // add event to initialize renderIndexView
   },
 
@@ -25,7 +27,8 @@ window.Shortly = Backbone.View.extend({
     console.log( "Shortly is running" );
     $('body').append(this.render().el);
     this.renderLoginView();
-    // this.renderIndexView(); // default view
+    // request to fetch on interval
+    // on success for login, fetch 
   },
 
   render: function(){
@@ -36,6 +39,9 @@ window.Shortly = Backbone.View.extend({
     var login = new Shortly.Login();
     var loginView = new Shortly.LoginView( { model: login } );
     this.$el.find('#container').html( loginView.render().el );
+    
+    // post request, on success, render index view
+    // this.renderIndexView(); // default view
   },
 
   renderIndexView: function(e){
@@ -87,6 +93,22 @@ window.Shortly = Backbone.View.extend({
     // $.get('/clicked').done(function(data){});
     $.get('/lastVisited').done(function(data){});
     this.renderIndexView();
+  },
+
+  authenticate: function(){
+    var thisUsername = $('.username').val();
+    var thisPassword = $('.password').val();
+    var that = this;
+    $.ajax({
+      type: "POST",
+      data: JSON.stringify({'username': thisUsername, 'password': thisPassword}),
+      success: function(){ 
+        $('.login').remove();
+        that.renderIndexView();
+      }, 
+      error: console.log("error"),
+    });
+    console.log(thisUsername, thisPassword);
   },
     // this.$el.find('.search').val('');
 
