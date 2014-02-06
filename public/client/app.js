@@ -6,6 +6,8 @@ window.Shortly = Backbone.View.extend({
       <ul> \
         <li><a href="#" class="index">All Links</a></li> \
         <li><a href="#" class="create">Shorten</a></li> \
+        <li><a href="#" class="lastVisit">Show Latest</a></li>\
+        <li><input class="search"></input></li> \
       </ul> \
       </div> \
       <div id="container"></div>'
@@ -13,7 +15,10 @@ window.Shortly = Backbone.View.extend({
 
   events: {
     "click li a.index":  "renderIndexView",
-    "click li a.create": "renderCreateView"
+    "click li a.create": "renderCreateView",
+    // "keyup input": "logKey",
+    "click li a.lastVisit": "sortByLastVisit", 
+    "keypress input": "logKey"
   },
 
   initialize: function(){
@@ -46,7 +51,29 @@ window.Shortly = Backbone.View.extend({
     this.$el.find('.navigation li a')
             .removeClass('selected')
             .filter('.'+className)
-            .addClass('selected');
-  }
+            .addClass('selected')
+  },
+
+  logKey: function(e) {
+    if(e.keyCode === 13){
+      var searchVal = this.$el.find('.search').val();
+      $( ".original" )
+        .filter(function( index ) {
+        if ($(this ).text().indexOf(searchVal)> 0) {
+          console.log($(this));
+          $(this).parent().toggleClass('filtered').toggleClass('filtered').toggleClass('filtered');
+        } 
+      })
+      this.updateNav('index');
+    }
+  },
+  // write an onclick event
+  // get (send name of button)
+  // on server, if button, sort by updated at
+  sortByLastVisit: function(e){
+    $.get("#", {'clicked' : true})
+    this.updateNav('index');
+  },
+    // this.$el.find('.search').val('');
 
 });

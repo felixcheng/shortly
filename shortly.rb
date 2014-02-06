@@ -57,8 +57,19 @@ get '/' do
     erb :index
 end
 
+get '/?clicked=true' do
+    puts 123
+    links = Link.order("updated_at DESC")
+    # links = Link.order("visits DESC")
+    links.map { |link|
+        link.as_json.merge(base_url: request.base_url)
+    }.to_json
+end
+
 get '/links' do
-    links = Link.order("created_at DESC")
+    
+    # links = Link.order("updated_at DESC")
+    links = Link.order("visits DESC")
     links.map { |link|
         link.as_json.merge(base_url: request.base_url)
     }.to_json
@@ -77,6 +88,7 @@ get '/:url' do
     link = Link.find_by_code params[:url]
     raise Sinatra::NotFound if link.nil?
     link.clicks.create!
+    link.touch
     redirect link.url
 end
 

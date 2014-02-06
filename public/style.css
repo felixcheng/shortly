@@ -131,3 +131,7 @@ form input[type=text] {
 .creator .message {
   clear: both;
 }
+
+.filtered {
+  background-color: #F5F6CE;
+}

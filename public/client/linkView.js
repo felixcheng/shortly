@@ -6,6 +6,7 @@ Shortly.LinkView = Backbone.View.extend({
       <img src="/redirect_icon.png"/> \
       <div class="info"> \
         <div class="visits"><span class="count"><%= visits %></span>Visits</div> \
+        <div class="lastVisit"><span class="count"><%= updated_at.slice(0, 10) %></span></div> \
         <div class="title"><%= title %></div> \
         <div class="original"><%= url %></div> \
         <a href="<%= base_url %>/<%= code %>"><%= base_url %>/<%= code %></a> \

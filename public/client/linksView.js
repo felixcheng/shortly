@@ -7,6 +7,10 @@ Shortly.LinksView = Backbone.View.extend({
     this.collection.fetch();
   },
 
+  events: {
+    'search': 'search'
+  },
+
   render: function() {
     this.$el.empty();
     return this;

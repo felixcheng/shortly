@@ -12,6 +12,7 @@ class CreateLinks < ActiveRecord::Migration
         create_table :links do |t|
             t.string :url
             t.string :code
+            t.string :lastVisited
             t.timestamps
         end
     end
