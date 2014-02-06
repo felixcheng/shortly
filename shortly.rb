@@ -49,27 +49,48 @@ class Click < ActiveRecord::Base
     belongs_to :link, counter_cache: :visits
 end
 
+class User < ActiveRecord::Base
+    validates :username, presence: true
+    validates :password, presence: true
+end
+
 ###########################################################
 # Routes
 ###########################################################
-
-get '/' do
-    erb :index
-end
-
-get '/?clicked=true' do
-    puts 123
+get '/lastVisited' do
+    # if params == {"clicked"=>"hooray!"}
     links = Link.order("updated_at DESC")
     # links = Link.order("visits DESC")
     links.map { |link|
         link.as_json.merge(base_url: request.base_url)
     }.to_json
+    # end
+end
+
+get '/login' do
+  erb :login
+end
+
+
+get '/' do
+  if !authenticate?
+     redirect "/login" 
+  end
+
+    erb :index
 end
 
 get '/links' do
-    
     # links = Link.order("updated_at DESC")
     links = Link.order("visits DESC")
+    links.map { |link|
+        link.as_json.merge(base_url: request.base_url)
+    }.to_json
+end
+
+post '/' do
+    links = Link.order("updated_at DESC")
+    # links = Link.order("visits DESC")
     links.map { |link|
         link.as_json.merge(base_url: request.base_url)
     }.to_json

@@ -12,7 +12,7 @@ Shortly.LinkView = Backbone.View.extend({
         <a href="<%= base_url %>/<%= code %>"><%= base_url %>/<%= code %></a> \
       </div>'
   ),
-
+  
   render: function() {
     this.$el.html( this.template(this.model.attributes) );
     return this;

@@ -16,20 +16,25 @@ window.Shortly = Backbone.View.extend({
   events: {
     "click li a.index":  "renderIndexView",
     "click li a.create": "renderCreateView",
-    // "keyup input": "logKey",
-    "click li a.lastVisit": "sortByLastVisit", 
+    "click li a.lastVisit": "sortVisit", 
     "keypress input": "logKey"
+    // add event to initialize renderIndexView
   },
 
   initialize: function(){
     console.log( "Shortly is running" );
     $('body').append(this.render().el);
-    this.renderIndexView(); // default view
+    this.renderLoginView();
+    // this.renderIndexView(); // default view
   },
 
   render: function(){
     this.$el.html( this.template() );
     return this;
+  },
+  renderLoginView: function(){
+    var loginView = new Shortly.LoginView( { model: login } );
+    this.$el.find('#container').html( loginView.render().el );
   },
 
   renderIndexView: function(e){
@@ -67,12 +72,20 @@ window.Shortly = Backbone.View.extend({
       this.updateNav('index');
     }
   },
+
+  sortVisit: function(e){
+    console.log('hi');
+    var list = $(".link");
+    console.log(list)
+  },
   // write an onclick event
   // get (send name of button)
   // on server, if button, sort by updated at
   sortByLastVisit: function(e){
-    $.get("#", {'clicked' : true})
-    this.updateNav('index');
+    // this.updateNav('index');
+    // $.get('/clicked').done(function(data){});
+    $.get('/lastVisited').done(function(data){});
+    this.renderIndexView();
   },
     // this.$el.find('.search').val('');
 
