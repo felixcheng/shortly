@@ -30,8 +30,8 @@ configure :development, :production do
      )
 end
 
-before do 
-    halt redirect '/login' unless logged_in?
+before '/' do 
+    halt redirect ('/login') unless logged_in?
 end
 
 # Handle potential connection pool timeout issues
@@ -65,8 +65,17 @@ end
 
 class User < ActiveRecord::Base
     # include BCrypt
-    validates :username, presence: true
-    validates :password, presence: true
+    def authenticate(password)
+        self.password == BCrypt::Engine.hash_secret(password)
+    end
+    before_create do |record|
+        record.password = BCrypt::Engine.hash_secret(record.password)
+        record.token    = Digest::SHA1.hexdigest record.to_s
+        puts "#{record}, #{record.token}"
+    end
+    # validates :username, presence: true
+    # validates :password, presence: true
+    # validates :token, presence: true
 end
 
 ###########################################################
@@ -79,6 +88,20 @@ end
 
 post '/signup' do
     erb :signup
+    puts params
+    you = User.find_by_username(params["username"])
+    puts "#{you}, in signup, before redirecting"
+    if !you.nil?
+        puts "redirecting to login"
+        redirect '/login'
+    else # you = User.create(params["username"].to_s)
+        you = User.create params
+        you.save()
+        puts you.inspect
+        puts "redirecting from else"
+        redirect '/'
+    end
+
 end
 
 get '/login' do
@@ -86,23 +109,18 @@ get '/login' do
 end
 
 post '/login' do 
-    puts params
     if params["username"]
         username = params["username"]
         password = params["password"]
         you = User.find_by_username(username.to_s)
-        if you.nil?
-            puts "username doesn't exist in database. Creating new one, for now." 
-            # for now, encrypt password, add to login
-            User.create(username: username, password: BCrypt::Password.create(password))
-        elsif authenticate?(password, you)
+        if !you.nil?
             puts "found username, found password"
-            session[:username] = you.id
-            logged_in?
+            session[:username] = user.token if user.authenticate(params[:password])
+            redirect '/'
             puts session[:username]
         else
-            error 404
-            puts "wrong password, solve later"
+          redirect '/signup'
+            # error 404
         end
     # elsif params["newUsername"]
 
@@ -115,6 +133,11 @@ end
 
 get '/' do
     erb :index
+end
+
+get '/logout' do
+    session[:username] = nil
+    redirect '/'
 end
 
 get '/links' do
@@ -174,11 +197,10 @@ def get_url_title url
 end
 
 # helper function, checks password against bcrypted password
-def authenticate?(password, you)
-    BCrypt::Password.new(you[:password]) == password
-end
+# def authenticate?(password, you)
+#     BCrypt::Password.new(you[:password]) == password
+# end
 
 def logged_in?
-    puts session.inspect
     !session[:username].nil? ####### figure out session username
 end
