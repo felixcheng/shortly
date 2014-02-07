@@ -5,8 +5,7 @@ require 'digest/sha1'
 require 'pry'
 require 'uri'
 require 'open-uri'
-# require 'bcrypt' # WHY DOES THIS
-
+require 'bcrypt'
 # require 'nokogiri'
 
 set :sessions, true
@@ -29,6 +28,10 @@ configure :development, :production do
        :adapter => 'sqlite3',
        :database =>  'db/dev.sqlite3.db'
      )
+end
+
+before do 
+    halt redirect '/login' unless logged_in?
 end
 
 # Handle potential connection pool timeout issues
@@ -61,6 +64,7 @@ class Click < ActiveRecord::Base
 end
 
 class User < ActiveRecord::Base
+    # include BCrypt
     validates :username, presence: true
     validates :password, presence: true
 end
@@ -68,14 +72,13 @@ end
 ###########################################################
 # Routes
 ###########################################################
-get '/lastVisited' do
-    # if params == {"clicked"=>"hooray!"}
-    links = Link.order("updated_at DESC")
-    # links = Link.order("visits DESC")
-    links.map { |link|
-        link.as_json.merge(base_url: request.base_url)
-    }.to_json
-    # end
+
+get '/signup' do
+    erb :signup
+end
+
+post '/signup' do
+    erb :signup
 end
 
 get '/login' do
@@ -83,35 +86,39 @@ get '/login' do
 end
 
 post '/login' do 
-    puts params["password"]
-    username = params["username"]
-    password = params["password"]
-    you = User.find_by_username(username.to_s)
-    puts "#{you.username} #{you.password} found"
-    if you.nil?
-        puts "username doesn't exist in database. Creating new one, for now." 
-        # for now, encrypt password, add to login
-        User.create(username: username, password: BCrypt::Password.create(password))
-    elsif authenticate?(password, you)
-        puts "found username, found password"
-        session[:username] = you.id
-        puts session[:username]
-    else
-        error 404
-        puts "wrong password, solve later"
+    puts params
+    if params["username"]
+        username = params["username"]
+        password = params["password"]
+        you = User.find_by_username(username.to_s)
+        if you.nil?
+            puts "username doesn't exist in database. Creating new one, for now." 
+            # for now, encrypt password, add to login
+            User.create(username: username, password: BCrypt::Password.create(password))
+        elsif authenticate?(password, you)
+            puts "found username, found password"
+            session[:username] = you.id
+            logged_in?
+            puts session[:username]
+        else
+            error 404
+            puts "wrong password, solve later"
+        end
+    # elsif params["newUsername"]
+
+    # # else
+    # #     error
     end
-    logged_in?
-    puts "redirecting"
 end
 
+
+
 get '/' do
-    logged_in?
     erb :index
 end
 
 get '/links' do
     # links = Link.order("updated_at DESC")
-    logged_in?
     links = Link.order("visits DESC")
     links.map { |link|
         link.as_json.merge(base_url: request.base_url)
@@ -170,10 +177,8 @@ end
 def authenticate?(password, you)
     BCrypt::Password.new(you[:password]) == password
 end
+
 def logged_in?
-    if session[:username]
-        return true
-    else
-        redirect '/login'
-    end
+    puts session.inspect
+    !session[:username].nil? ####### figure out session username
 end

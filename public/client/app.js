@@ -18,7 +18,7 @@ window.Shortly = Backbone.View.extend({
     "click li a.create": "renderCreateView",
     "click li a.lastVisit": "sortVisit", 
     "keypress input": "logKey",
-     "click button.submit": "authenticate"
+ 
 
     // add event to initialize renderIndexView
   },
@@ -26,9 +26,7 @@ window.Shortly = Backbone.View.extend({
   initialize: function(){
     console.log( "Shortly is running" );
     $('body').append(this.render().el);
-    this.renderLoginView();
-    // request to fetch on interval
-    // on success for login, fetch 
+    this.renderIndexView();
   },
 
   render: function(){
@@ -39,9 +37,6 @@ window.Shortly = Backbone.View.extend({
     var login = new Shortly.Login();
     var loginView = new Shortly.LoginView( { model: login } );
     this.$el.find('#container').html( loginView.render().el );
-    
-    // post request, on success, render index view
-    // this.renderIndexView(); // default view
   },
 
   renderIndexView: function(e){
@@ -95,21 +90,33 @@ window.Shortly = Backbone.View.extend({
     this.renderIndexView();
   },
 
-  authenticate: function(){
-    var thisUsername = $('.username').val();
-    var thisPassword = $('.password').val();
+  authenticate: function(usr, pw){
+    var thisUsername = usr || $('.username').val();
+    var thisPassword = pw || $('.password').val();
     var that = this;
     $.ajax({
       type: "POST",
       data: JSON.stringify({'username': thisUsername, 'password': thisPassword}),
       success: function(){ 
         $('.login').remove();
+        $('.navigation').show();
         that.renderIndexView();
       }, 
       error: console.log("error"),
     });
     console.log(thisUsername, thisPassword);
   },
-    // this.$el.find('.search').val('');
+
+  checkPassword: function(){
+    if ($('.newPassword').val() !== $('.reenterPassword').val()){
+    
+      $('h3.reenter').text("Please re-enter your password");
+      $('.newPassword').val('');
+      $('.reenterPassword').val('');
+    } 
+    else { 
+      this.authenticate($('.newUsername').val(), $('.newPassword').val())
+    }
+  }
 
 });
